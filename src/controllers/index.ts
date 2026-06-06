@@ -1,67 +1,41 @@
 import express, { Router } from 'express';
+import { DydxV4Client } from '../services/dydx_v4/dydxV4Client';
 import { validateAlert } from '../services';
-import { DexRegistry } from '../services/dexRegistry';
 
 const router: Router = express.Router();
-
-let dexRegistryInstance: DexRegistry | null = null;
-function getDexRegistry(): DexRegistry {
-    if (!dexRegistryInstance) {
-        dexRegistryInstance = new DexRegistry();
-    }
-    return dexRegistryInstance;
-}
+const dydxClient = new DydxV4Client();
 
 router.get('/', async (req, res) => {
     res.send('OK');
 });
 
-router.get('/accounts', async (req, res) => {
-    console.log('Received GET request.');
-    try {
-        const dexRegistry = getDexRegistry();
-        const dexNames = ['dydxv4', 'perpetual', 'gmx', 'bluefin', 'hyperliquid', 'grvt'];
-        const dexClients = dexNames.map((name) => dexRegistry.getDex(name));
-        const accountStatuses = await Promise.all(
-            dexClients.map((client) => client.getIsAccountReady())
-        );
-        const message = {
-            dYdX_v4: accountStatuses[0],
-            PerpetualProtocol: accountStatuses[1],
-            GMX: accountStatuses[2],
-            Bluefin: accountStatuses[3],
-            Hyperliquid: accountStatuses[4],
-            GRVT: accountStatuses[5]
-        };
-        res.send(message);
-    } catch (error) {
-        console.error('Failed to get account readiness:', error);
-        if (!res.headersSent) {
-            res.status(500).send('Internal server error');
-        }
-    }
-});
-
 router.post('/', async (req, res) => {
     try {
-        console.log('Recieved Tradingview strategy alert:', req.body);
-        const validated = await validateAlert(req.body);
-        if (!validated) {
-            res.send('Error. alert message is not valid');
+        const alertMessage = req.body;
+        
+        if (!alertMessage.passphrase || alertMessage.passphrase !== process.env.TRADINGVIEW_PASSPHRASE) {
+            console.error('Passphrase missing or incorrect');
+            res.send('Error');
             return;
         }
-        const exchange = req.body['exchange']?.toLowerCase() || 'dydx';
-        const dexClient = getDexRegistry().getDex(exchange);
-        if (!dexClient) {
-            res.send(`Error. Exchange: ${exchange} is not supported`);
+
+        if (!alertMessage.size || (alertMessage.order !== 'buy' && alertMessage.order !== 'sell')) {
+            console.error('Missing size or invalid order direction');
+            res.send('Error');
             return;
         }
-        const result = await dexClient.placeOrder(req.body);
+
+        const result = await dydxClient.placeOrder(alertMessage);
+        if (!result) {
+            res.send('Error');
+            return;
+        }
+
         res.send('OK');
-    } catch (e) {
-        console.error('POST error:', e);
+    } catch (error) {
+        console.error('POST error:', error);
         if (!res.headersSent) {
-            res.send('error');
+            res.send('Error');
         }
     }
 });
