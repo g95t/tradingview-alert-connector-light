@@ -12,6 +12,8 @@ import {
     IndexerConfig
 } from '@dydxprotocol/v4-client-js';
 import { dydxV4OrderParams, AlertObject } from '../../types';
+import 'dotenv/config';
+import config from 'config';
 
 export class DydxV4Client {
     private static client: CompositeClient | null = null;
@@ -28,7 +30,7 @@ export class DydxV4Client {
         const execution = OrderExecution.DEFAULT;
         const slippagePercentage = 0.05;
         const price =
-            side == OrderSide.BUY
+            side === OrderSide.BUY
                 ? orderParams.price * (1 + slippagePercentage)
                 : orderParams.price * (1 - slippagePercentage);
         const size = orderParams.size;
@@ -47,7 +49,7 @@ export class DydxV4Client {
                 size,
                 clientId,
                 timeInForce,
-                120000, // 2 minutes
+                120000, // GTT 2 minutes
                 execution,
                 postOnly,
                 reduceOnly,
@@ -65,15 +67,22 @@ export class DydxV4Client {
 
     private buildOrderParams(alertMessage: AlertObject): dydxV4OrderParams {
         const orderSide =
-            alertMessage.order == 'buy' ? OrderSide.BUY : OrderSide.SELL;
+            alertMessage.order === 'buy' ? OrderSide.BUY : OrderSide.SELL;
         const market = alertMessage.market.replace(/_/g, '-');
-        const orderSize = alertMessage.size;
+
+        // If no price provided, use extreme price for immediate fill
+        let price: number;
+        if (alertMessage.price) {
+            price = Number(alertMessage.price);
+        } else {
+            price = orderSide === OrderSide.BUY ? 10000000 : 1;
+        }
 
         const orderParams: dydxV4OrderParams = {
             market,
             side: orderSide,
-            size: Number(orderSize),
-            price: Number(alertMessage.price)
+            size: Number(alertMessage.size),
+            price
         };
         console.log('orderParams for dydx v4', orderParams);
         return orderParams;
@@ -85,7 +94,7 @@ export class DydxV4Client {
         }
 
         const validatorConfig = new ValidatorConfig(
-            'https://dydx-ops-rpc.kingnodes.com',
+            config.get('DydxV4.ValidatorConfig.restEndpoint'),
             'dydx-mainnet-1',
             {
                 CHAINTOKEN_DENOM: 'adydx',
@@ -96,7 +105,7 @@ export class DydxV4Client {
             }
         );
         const network =
-            process.env.NODE_ENV == 'production'
+            process.env.NODE_ENV === 'production'
                 ? new Network('mainnet', this.getIndexerConfig(), validatorConfig)
                 : Network.testnet();
 
@@ -131,8 +140,8 @@ export class DydxV4Client {
 
     private getIndexerConfig() {
         return new IndexerConfig(
-            'https://indexer.dydx.trade',
-            'wss://indexer.dydx.trade/v4/w'
+            config.get('DydxV4.IndexerConfig.httpsEndpoint'),
+            config.get('DydxV4.IndexerConfig.wssEndpoint')
         );
     }
 
