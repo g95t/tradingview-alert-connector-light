@@ -18,14 +18,8 @@ router.post('/', async (req, res) => {
             return;
         }
 
-        if (!alertMessage.price || price <= 0 || !isFinite(price) || !alertMessage.market || !alertMessage.size || (alertMessage.order !== 'buy' && alertMessage.order !== 'sell')) {
+        if (!alertMessage.price || alertMessage.price <= 0 || !alertMessage.market || !alertMessage.size || alertMessage.size<= 0 || (alertMessage.order !== 'buy' && alertMessage.order !== 'sell')) {
             console.error('Error');
-            res.send('Error');
-            return;
-        }
-
-        if (!alertMessage.price || !alertMessage.market) {
-            console.error('Missing price or market');
             res.send('Error');
             return;
         }
