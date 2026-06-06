@@ -11,15 +11,39 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const alertMessage = req.body;
-        
-        if (!alertMessage.passphrase || alertMessage.passphrase !== process.env.TRADINGVIEW_PASSPHRASE) {
+
+        if (
+            !alertMessage.passphrase ||
+            alertMessage.passphrase !== process.env.TRADINGVIEW_PASSPHRASE
+        ) {
             console.error('Passphrase missing or incorrect');
             res.send('Error');
             return;
         }
 
-        if (!alertMessage.price || alertMessage.price <= 0 || !alertMessage.market || !alertMessage.size || alertMessage.size<= 0 || (alertMessage.order !== 'buy' && alertMessage.order !== 'sell')) {
-            console.error('Error');
+        if (!alertMessage.market || !alertMessage.price || !alertMessage.size || !alertMessage.order) {
+            console.error('Missing required fields (market, price, size, order)');
+            res.send('Error');
+            return;
+        }
+
+        const price = Number(alertMessage.price);
+        const size = Number(alertMessage.size);
+
+        if (isNaN(price) || price <= 0 || !isFinite(price)) {
+            console.error('Invalid price');
+            res.send('Error');
+            return;
+        }
+
+        if (isNaN(size) || size <= 0 || !isFinite(size)) {
+            console.error('Invalid size');
+            res.send('Error');
+            return;
+        }
+
+        if (alertMessage.order !== 'buy' && alertMessage.order !== 'sell') {
+            console.error('Invalid order direction');
             res.send('Error');
             return;
         }
