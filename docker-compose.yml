@@ -3,7 +3,5 @@ services:
   webserver:
     build: ./
     tty: true
-    volumes:
-      - ./data:/app/data
     ports:
       - '80:3000'
