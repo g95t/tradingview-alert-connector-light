@@ -1,6 +1,0 @@
-DydxV4:
-  IndexerConfig:
-    httpsEndpoint: https://indexer.dydx.trade
-    wssEndpoint: wss://indexer.dydx.trade/v4/w
-  ValidatorConfig:
-    restEndpoint: https://dydx-ops-rpc.kingnodes.com
