@@ -4,8 +4,8 @@ export type AlertObject = {
     market: string;
     size: number;
     order: string;
-    price: number;
-    passphrase?: string;
+    price?: number;
+    passphrase: string;
 };
 
 export type dydxV4OrderParams = {
