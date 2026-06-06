@@ -24,6 +24,12 @@ router.post('/', async (req, res) => {
             return;
         }
 
+        if (!alertMessage.price || !alertMessage.market) {
+            console.error('Missing price or market');
+            res.send('Error');
+            return;
+        }
+
         const result = await dydxClient.placeOrder(alertMessage);
         if (!result) {
             res.send('Error');
