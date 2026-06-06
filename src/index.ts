@@ -5,15 +5,7 @@ import * as Tracing from '@sentry/tracing';
 import { CaptureConsole as CaptureConsoleIntegration } from '@sentry/integrations';
 import helmet from 'helmet';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
-
-// Load .env from Render secret files path, fallback to local
-const renderEnvPath = '/etc/secrets/.env';
-if (fs.existsSync(renderEnvPath)) {
-	dotenv.config({ path: renderEnvPath });
-} else {
-	dotenv.config();
-}
+import 'dotenv/config';
 
 const app: express.Express = express();
 const port = process.env.PORT || 3000;
