@@ -12,7 +12,6 @@ import {
     IndexerConfig
 } from '@dydxprotocol/v4-client-js';
 import { dydxV4OrderParams, AlertObject } from '../../types';
-import config from 'config';
 
 export class DydxV4Client {
     private static client: CompositeClient | null = null;
@@ -58,7 +57,6 @@ export class DydxV4Client {
             return { side: orderParams.side, size: orderParams.size, orderId: String(clientId) };
         } catch (error) {
             console.error('Order creation failed (no retry to prevent duplicates):', error);
-            // Invalida cache così al prossimo ordine si riconnette fresco
             DydxV4Client.client = null;
             DydxV4Client.subaccount = null;
             return null;
@@ -87,7 +85,7 @@ export class DydxV4Client {
         }
 
         const validatorConfig = new ValidatorConfig(
-            config.get('DydxV4.ValidatorConfig.restEndpoint'),
+            'https://dydx-ops-rpc.kingnodes.com',
             'dydx-mainnet-1',
             {
                 CHAINTOKEN_DENOM: 'adydx',
@@ -133,8 +131,8 @@ export class DydxV4Client {
 
     private getIndexerConfig() {
         return new IndexerConfig(
-            config.get('DydxV4.IndexerConfig.httpsEndpoint'),
-            config.get('DydxV4.IndexerConfig.wssEndpoint')
+            'https://indexer.dydx.trade',
+            'wss://indexer.dydx.trade/v4/w'
         );
     }
 
