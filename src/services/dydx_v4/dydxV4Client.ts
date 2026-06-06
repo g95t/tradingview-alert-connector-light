@@ -12,7 +12,6 @@ import {
     IndexerConfig
 } from '@dydxprotocol/v4-client-js';
 import { dydxV4OrderParams, AlertObject } from '../../types';
-import 'dotenv/config';
 import config from 'config';
 
 export class DydxV4Client {
