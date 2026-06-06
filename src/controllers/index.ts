@@ -1,6 +1,5 @@
 import express, { Router } from 'express';
 import { DydxV4Client } from '../services/dydx_v4/dydxV4Client';
-import { validateAlert } from '../services';
 
 const router: Router = express.Router();
 const dydxClient = new DydxV4Client();
