@@ -13,7 +13,6 @@ import {
 } from '@dydxprotocol/v4-client-js';
 import { dydxV4OrderParams, AlertObject } from '../../types';
 import 'dotenv/config';
-import config from 'config';
 
 export class DydxV4Client {
     private static client: CompositeClient | null = null;
@@ -94,7 +93,7 @@ export class DydxV4Client {
         }
 
         const validatorConfig = new ValidatorConfig(
-            config.get('DydxV4.ValidatorConfig.restEndpoint'),
+            'https://dydx-ops-rpc.kingnodes.com',
             'dydx-mainnet-1',
             {
                 CHAINTOKEN_DENOM: 'adydx',
@@ -140,8 +139,8 @@ export class DydxV4Client {
 
     private getIndexerConfig() {
         return new IndexerConfig(
-            config.get('DydxV4.IndexerConfig.httpsEndpoint'),
-            config.get('DydxV4.IndexerConfig.wssEndpoint')
+            'https://indexer.dydx.trade',
+            'wss://indexer.dydx.trade/v4/w'
         );
     }
 
