@@ -21,20 +21,13 @@ router.post('/', async (req, res) => {
             return;
         }
 
-        if (!alertMessage.market || !alertMessage.price || !alertMessage.size || !alertMessage.order) {
-            console.error('Missing required fields (market, price, size, order)');
+        if (!alertMessage.market || !alertMessage.size || !alertMessage.order) {
+            console.error('Missing required fields (market, size, order)');
             res.send('Error');
             return;
         }
 
-        const price = Number(alertMessage.price);
         const size = Number(alertMessage.size);
-
-        if (isNaN(price) || price <= 0 || !isFinite(price)) {
-            console.error('Invalid price');
-            res.send('Error');
-            return;
-        }
 
         if (isNaN(size) || size <= 0 || !isFinite(size)) {
             console.error('Invalid size');
@@ -46,6 +39,15 @@ router.post('/', async (req, res) => {
             console.error('Invalid order direction');
             res.send('Error');
             return;
+        }
+
+        if (alertMessage.price !== undefined && alertMessage.price !== null && alertMessage.price !== '') {
+            const price = Number(alertMessage.price);
+            if (isNaN(price) || price <= 0 || !isFinite(price)) {
+                console.error('Invalid price');
+                res.send('Error');
+                return;
+            }
         }
 
         const result = await dydxClient.placeOrder(alertMessage);
