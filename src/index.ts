@@ -4,7 +4,6 @@ import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
 import { CaptureConsole as CaptureConsoleIntegration } from '@sentry/integrations';
 import helmet from 'helmet';
-import * as dotenv from 'dotenv';
 import 'dotenv/config';
 
 const app: express.Express = express();
