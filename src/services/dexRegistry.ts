@@ -11,8 +11,9 @@ export class DexRegistry {
 
 	constructor() {
 		this.registeredDexs = new Map();
-		this.registeredDexs.set('dydxv4', new DydxV4Client());
-		this.registeredDexs.set('dydx', new DydxV4Client());
+		const dydxClient = new DydxV4Client();
+		this.registeredDexs.set('dydxv4', dydxClient);
+		this.registeredDexs.set('dydx', dydxClient);
 		this.registeredDexs.set('perpetual', new PerpClient());
 		this.registeredDexs.set('gmx', new GmxClient());
 		this.registeredDexs.set('bluefin', new BluefinDexClient());
