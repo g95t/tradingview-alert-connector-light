@@ -25,12 +25,12 @@ export const validateAlert = async (
 	}
 
 	// check exchange
+	const VALID_EXCHANGES = ['dydxv4', 'dydx', 'perpetual', 'gmx', 'bluefin', 'hyperliquid', 'grvt'];
 	if (alertMessage.exchange) {
-		const validExchanges = new DexRegistry().getAllDexKeys();
-		if (!validExchanges.includes(alertMessage.exchange)) {
-			console.error('Exchange name must be one of: ' + validExchanges.join(', '));
-			return false;
-		}
+	    if (!VALID_EXCHANGES.includes(alertMessage.exchange)) {
+	        console.error('Exchange name must be one of: ' + VALID_EXCHANGES.join(', '));
+	        return false;
+	    }
 	}
 
 	// check strategy name
@@ -67,25 +67,19 @@ export const validateAlert = async (
 
 	const [db, rootData] = getStrategiesDB();
 	console.log('strategyData', rootData[alertMessage.strategy]);
-
 	const rootPath = '/' + alertMessage.strategy;
-
 	if (!rootData[alertMessage.strategy]) {
-		const reversePath = rootPath + '/reverse';
-		db.push(reversePath, alertMessage.reverse);
-
-		const isFirstOrderPath = rootPath + '/isFirstOrder';
-		db.push(isFirstOrderPath, 'true');
+	    const reversePath = rootPath + '/reverse';
+	    db.push(reversePath, alertMessage.reverse);
+	    const isFirstOrderPath = rootPath + '/isFirstOrder';
+	    db.push(isFirstOrderPath, 'true');
 	}
-
 	if (
-		alertMessage.position == 'flat' &&
-		rootData[alertMessage.strategy].isFirstOrder == 'true'
+	    alertMessage.position == 'flat' &&
+	    rootData[alertMessage.strategy]?.isFirstOrder == 'true'
 	) {
-		console.log(
-			'this alert is first and close order, so does not create a new order.'
-		);
-		return false;
+	    console.log('this alert is first and close order, so does not create a new order.');
+	    return false;
 	}
 
 	return true;
