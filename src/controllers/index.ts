@@ -17,8 +17,6 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/accounts', async (req, res) => {
-    // Mantenuto per compatibilità, ma opzionale su Render Free
-    // perché chiama API di tutti i DEX — può essere lento
     console.log('Received GET request.');
     try {
         const dexRegistry = getDexRegistry();
