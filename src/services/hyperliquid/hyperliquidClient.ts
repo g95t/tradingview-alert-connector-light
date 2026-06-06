@@ -340,38 +340,44 @@ export class HyperliquidClient extends AbstractDexClient {
 
 		db.push(positionPath, storedSize + position);
 
-		const environment =
-			config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
-		const folderPath = './data/exports/' + environment;
-		if (!fs.existsSync(folderPath)) {
-			fs.mkdirSync(folderPath, { recursive: true });
+		try {
+		        const environment =
+		            config.util.getEnv('NODE_ENV') == 'production' ? 'mainnet' : 'testnet';
+		        const folderPath = './data/exports/' + environment;
+		        if (!fs.existsSync(folderPath)) {
+		            fs.mkdirSync(folderPath, {
+		                recursive: true
+		            });
+		        }
+		
+		        const fullPath = folderPath + '/tradeHistoryHyperliquid.csv';
+		        if (!fs.existsSync(fullPath)) {
+		            const headerString =
+		                'datetime,strategy,market,side,size,avgPrice,tradingviewPrice,priceGap,status,orderId';
+		            fs.writeFileSync(fullPath, headerString);
+		        }
+		
+		        const priceGap = parseFloat(avgPx) - tradingviewPrice;
+		        const status = statuses[0]?.filled ? 'FILLED' : 'FAILED';
+		        const date = new Date();
+		
+		        const appendArray = [
+		            date.toISOString(),
+		            strategy,
+		            market,
+		            side,
+		            orderSize,
+		            avgPx,
+		            tradingviewPrice,
+		            priceGap,
+		            status,
+		            oid
+		        ];
+		        const appendString = '\r\n' + appendArray.join();
+		
+		        fs.appendFileSync(fullPath, appendString);
+		    } catch (err) {
+		        console.warn('CSV export skipped:', (err as Error).message);
+		    }
 		}
-
-		const fullPath = folderPath + '/tradeHistoryHyperliquid.csv';
-		if (!fs.existsSync(fullPath)) {
-			const headerString =
-				'datetime,strategy,market,side,size,avgPrice,tradingviewPrice,priceGap,status,orderId';
-			fs.writeFileSync(fullPath, headerString);
-		}
-
-		const priceGap = parseFloat(avgPx) - tradingviewPrice;
-		const status = statuses[0]?.filled ? 'FILLED' : 'FAILED';
-		const date = new Date();
-
-		const appendArray = [
-			date.toISOString(),
-			strategy,
-			market,
-			side,
-			orderSize,
-			avgPx,
-			tradingviewPrice,
-			priceGap,
-			status,
-			oid
-		];
-		const appendString = '\r\n' + appendArray.join();
-
-		fs.appendFileSync(fullPath, appendString);
-	}
 }
