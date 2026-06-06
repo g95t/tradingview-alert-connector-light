@@ -47,7 +47,7 @@ export class DydxV4Client {
                 size,
                 clientId,
                 timeInForce,
-                120000, // GTT 2 minuti
+                120000, // 2 minutes
                 execution,
                 postOnly,
                 reduceOnly,
