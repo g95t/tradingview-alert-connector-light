@@ -1,17 +1,16 @@
 {
-	"include": ["src/**/*"],
-	"compilerOptions": {
-		"target": "es2016" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
-		"module": "commonjs" /* Specify what module code is generated. */,
-		"rootDir": "./src" /* Specify the root folder within your source files. */,
-		"resolveJsonModule": true /* Enable importing .json files */,
-		"sourceMap": true /* Create source map files for emitted JavaScript files. */,
-		"outDir": "./dist" /* Specify an output folder for all emitted files. */,
-		"esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables `allowSyntheticDefaultImports` for type compatibility. */,
-		"forceConsistentCasingInFileNames": true /* Ensure that casing is correct in imports. */,
-		"strict": false /* Enable all strict type-checking options. */,
-		"strictPropertyInitialization": false /* Check for class properties that are declared but not set in the constructor. */,
-		"skipDefaultLibCheck": true /* Skip type checking .d.ts files that are included with TypeScript. */,
-		"skipLibCheck": true /* Skip type checking all .d.ts files. */
-	}
+    "include": ["src/**/*"],
+    "compilerOptions": {
+        "target": "es2016",
+        "module": "commonjs",
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "sourceMap": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": false,
+        "strictPropertyInitialization": false,
+        "resolveJsonModule": true,
+        "skipLibCheck": true
+    }
 }
