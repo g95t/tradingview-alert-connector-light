@@ -1,9 +1,6 @@
 #dist directory
 dist
 
-#strategy json file
-strategies
-
 # Logs
 logs
 *.log
