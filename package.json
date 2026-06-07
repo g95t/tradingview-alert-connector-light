@@ -13,8 +13,6 @@
 	"dependencies": {
 		"@dydxprotocol/v4-client-js": "^3.6.0",
 		"dotenv": "^16.0.0",
-		"express": "^5.2.1",
-		"helmet": "^5.0.2",
 		"long": "^4.0.0"
 	},
 	"devDependencies": {
