@@ -1,6 +1,6 @@
 # Differences within this version
 
-Compared to the fantastic work of 0xIbuki (junta), this light version supports only dYdX platform, it does not perform saves and does not keep track of the position (which therefore must be completely managed through Tradingview) not allowing automatic reversal.
+Compared to the fantastic work of 0xIbuki (junta), this light version supports only dYdX platform, it does not perform saves and does not keep track of the position (which therefore must be completely managed through Tradingview) not allowing automatic reversal. Moreover, dYdX API KEY is used instead of mnemonic seed.
 
 Original project: https://github.com/junta/tradingview-alert-connector
 
