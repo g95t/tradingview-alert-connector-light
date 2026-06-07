@@ -1,7 +1,7 @@
 {
     "include": ["src/**/*"],
     "compilerOptions": {
-        "target": "es2016",
+        "target": "es2022",
         "module": "commonjs",
         "rootDir": "./src",
         "outDir": "./dist",
@@ -11,6 +11,7 @@
         "strict": false,
         "strictPropertyInitialization": false,
         "resolveJsonModule": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "lib": ["es2022", "webworker"]
     }
 }
