@@ -15,11 +15,18 @@ import Long from 'long';
 import { dydxV4OrderParams, AlertObject, PlaceOrderResult } from '../../types';
 
 const MAX_CONNECTION_RETRIES = 3;
+const CONNECTION_TIMEOUT_MS = 30000;
 
 export class DydxV4Client {
     private static client: CompositeClient | null = null;
     private static subaccount: SubaccountInfo | null = null;
     private static initializing: Promise<{ client: CompositeClient; subaccount: SubaccountInfo }> | null = null;
+    // Fix problema 1: store private key for reconnection after process.env deletion
+    private static storedPrivateKey: string | null = null;
+
+    static isReady(): boolean {
+        return DydxV4Client.client !== null && DydxV4Client.subaccount !== null;
+    }
 
     async placeOrder(alertMessage: AlertObject): Promise<PlaceOrderResult> {
         const orderParams = this.buildOrderParams(alertMessage);
@@ -32,7 +39,8 @@ export class DydxV4Client {
 
         for (let attempt = 0; attempt <= MAX_CONNECTION_RETRIES; attempt++) {
             try {
-                const result = await this.getClient();
+                // Fix problema 7: timeout on getClient to prevent infinite hang
+                const result = await this.getClientWithTimeout(CONNECTION_TIMEOUT_MS);
                 client = result.client;
                 subaccount = result.subaccount;
                 retries = attempt;
@@ -149,6 +157,16 @@ export class DydxV4Client {
         }
     }
 
+    // Fix problema 7: wrapper with timeout to prevent infinite hang
+    private async getClientWithTimeout(timeoutMs: number): Promise<{ client: CompositeClient; subaccount: SubaccountInfo }> {
+        return Promise.race([
+            this.getClient(),
+            new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error(`Connection timed out after ${timeoutMs}ms`)), timeoutMs)
+            )
+        ]);
+    }
+
     private async initializeClient() {
         const validatorConfig = new ValidatorConfig(
             'https://dydx-ops-rpc.kingnodes.com',
@@ -189,11 +207,16 @@ export class DydxV4Client {
     }
 
     private async generateLocalWallet() {
-        if (!process.env.DYDX_API_PRIVATE_KEY) {
+        // Fix problema 1: use stored key if available, otherwise read from env
+        const privateKey = DydxV4Client.storedPrivateKey || process.env.DYDX_API_PRIVATE_KEY;
+        if (!privateKey) {
             throw new Error('DYDX_API_PRIVATE_KEY is not set');
         }
+        // Store for reconnection before deleting from process.env
+        DydxV4Client.storedPrivateKey = privateKey;
+
         const localWallet = await LocalWallet.fromPrivateKey(
-            process.env.DYDX_API_PRIVATE_KEY,
+            privateKey,
             BECH32_PREFIX
         );
         console.log('dYdX v4 API Key Address:', localWallet.address);
