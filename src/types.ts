@@ -19,7 +19,7 @@ export type PlaceOrderResult = {
     success: boolean;
     retries: number;
     errorType?: 'connection' | 'order';
-    side?: string;
-    size?: number;
-    market?: string;
+    side: string;
+    size: number;
+    market: string;
 };
