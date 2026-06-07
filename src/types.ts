@@ -14,3 +14,12 @@ export type dydxV4OrderParams = {
     size: number;
     price: number;
 };
+
+export type PlaceOrderResult = {
+    success: boolean;
+    retries: number;
+    errorType?: 'connection' | 'order';
+    side?: string;
+    size?: number;
+    market?: string;
+};
