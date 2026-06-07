@@ -24,10 +24,6 @@ export class DydxV4Client {
     // Fix problema 1: store private key for reconnection after process.env deletion
     private static storedPrivateKey: string | null = null;
 
-    static isReady(): boolean {
-        return DydxV4Client.client !== null && DydxV4Client.subaccount !== null;
-    }
-
     async placeOrder(alertMessage: AlertObject): Promise<PlaceOrderResult> {
         const orderParams = this.buildOrderParams(alertMessage);
         const sideLabel = orderParams.side === OrderSide.BUY ? 'Buy' : 'Sell';
@@ -39,7 +35,7 @@ export class DydxV4Client {
 
         for (let attempt = 0; attempt <= MAX_CONNECTION_RETRIES; attempt++) {
             try {
-                // Fix problema 7: timeout on getClient to prevent infinite hang
+                // Fix problema 7: timeout on connection to prevent infinite hang
                 const result = await this.getClientWithTimeout(CONNECTION_TIMEOUT_MS);
                 client = result.client;
                 subaccount = result.subaccount;
