@@ -18,6 +18,7 @@ const MAX_CONNECTION_RETRIES = 3;
 export class DydxV4Client {
     private static client: CompositeClient | null = null;
     private static subaccount: SubaccountClient | null = null;
+    private static initializing: Promise<{ client: CompositeClient; subaccount: SubaccountClient }> | null = null;
 
     async placeOrder(alertMessage: AlertObject): Promise<PlaceOrderResult> {
         const orderParams = this.buildOrderParams(alertMessage);
@@ -139,7 +140,19 @@ export class DydxV4Client {
         if (DydxV4Client.client && DydxV4Client.subaccount) {
             return { client: DydxV4Client.client, subaccount: DydxV4Client.subaccount };
         }
+        if (DydxV4Client.initializing) {
+            return DydxV4Client.initializing;
+        }
+        DydxV4Client.initializing = this.initializeClient();
+        try {
+            const result = await DydxV4Client.initializing;
+            return result;
+        } finally {
+            DydxV4Client.initializing = null;
+        }
+    }
 
+    private async initializeClient() {
         const validatorConfig = new ValidatorConfig(
             'https://dydx-ops-rpc.kingnodes.com',
             'dydx-mainnet-1',
