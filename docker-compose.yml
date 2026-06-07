@@ -1,6 +1,0 @@
-services:
-  webserver:
-    build: ./
-    tty: true
-    ports:
-      - '80:3000'
