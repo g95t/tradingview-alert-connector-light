@@ -27,7 +27,7 @@ export class DydxV4Client {
 
         // Phase 1: Retry connection up to MAX_CONNECTION_RETRIES times
         let client: CompositeClient;
-        let subaccount: SubaccountClient;
+        let subaccount: SubaccountInfo;
         let retries = 0;
 
         for (let attempt = 0; attempt <= MAX_CONNECTION_RETRIES; attempt++) {
@@ -35,12 +35,11 @@ export class DydxV4Client {
                 const result = await this.getClient();
                 client = result.client;
                 subaccount = result.subaccount;
-                retries = attempt; // 0 = first try, 1 = first retry, etc.
+                retries = attempt;
                 break;
             } catch (error) {
                 retries = attempt;
                 if (attempt >= MAX_CONNECTION_RETRIES) {
-                    // All connection attempts exhausted
                     console.error('Connection failed after', MAX_CONNECTION_RETRIES, 'retries:', error);
                     return {
                         success: false,
@@ -51,7 +50,6 @@ export class DydxV4Client {
                         market: orderParams.market,
                     };
                 }
-                // Wait before retry (1s, 2s, 3s)
                 console.error('Connection attempt', attempt + 1, 'failed, retrying...', error);
                 await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
             }
@@ -84,7 +82,7 @@ export class DydxV4Client {
                 size,
                 clientId,
                 timeInForce,
-                120000, // GTT 2 minutes
+                120000,
                 execution,
                 postOnly,
                 reduceOnly,
@@ -99,7 +97,6 @@ export class DydxV4Client {
                 market: orderParams.market,
             };
         } catch (error) {
-            // Order execution failed — do NOT retry (could create duplicate orders)
             console.error('Order creation failed (no retry to prevent duplicates):', error);
             DydxV4Client.client = null;
             DydxV4Client.subaccount = null;
@@ -119,7 +116,6 @@ export class DydxV4Client {
             alertMessage.order === 'buy' ? OrderSide.BUY : OrderSide.SELL;
         const market = alertMessage.market.replace(/_/g, '-');
 
-        // If no price provided, use extreme price for immediate fill
         let price: number;
         if (alertMessage.price) {
             price = Number(alertMessage.price);
@@ -179,7 +175,12 @@ export class DydxV4Client {
         }
 
         const localWallet = await this.generateLocalWallet();
-        const subaccount = this.createSubaccount(localWallet);
+        const subaccount = SubaccountInfo.forPermissionedWallet(
+            localWallet,
+            process.env.DYDX_ADDRESS!,
+            0,
+            [Long.fromString(process.env.DYDX_AUTHENTICATOR_ID!)]
+        );
 
         DydxV4Client.client = client;
         DydxV4Client.subaccount = subaccount;
@@ -188,48 +189,16 @@ export class DydxV4Client {
     }
 
     private async generateLocalWallet() {
-        if (process.env.DYDX_API_PRIVATE_KEY) {
-            // API Key mode (trade-only — more secure)
-            const localWallet = await LocalWallet.fromPrivateKey(
-                process.env.DYDX_API_PRIVATE_KEY,
-                BECH32_PREFIX
-            );
-            console.log('dYdX v4 API Key Address:', localWallet.address);
-            // Delete from env after use — mnemonic/key not needed anymore at runtime
-            delete process.env.DYDX_API_PRIVATE_KEY;
-            return localWallet;
+        if (!process.env.DYDX_API_PRIVATE_KEY) {
+            throw new Error('DYDX_API_PRIVATE_KEY is not set');
         }
-
-        if (process.env.DYDX_V4_MNEMONIC) {
-            // Mnemonic mode (full access — fallback for backward compatibility)
-            const localWallet = await LocalWallet.fromMnemonic(
-                process.env.DYDX_V4_MNEMONIC,
-                BECH32_PREFIX
-            );
-            console.log('dYdX v4 Mnemonic Address:', localWallet.address);
-            // Delete from env after use
-            delete process.env.DYDX_V4_MNEMONIC;
-            return localWallet;
-        }
-
-        throw new Error('DYDX_API_PRIVATE_KEY or DYDX_V4_MNEMONIC must be set');
-    }
-
-    private createSubaccount(wallet: LocalWallet): SubaccountInfo {
-        const ownerAddress = process.env.DYDX_OWNER_ADDRESS;
-
-        if (ownerAddress && process.env.DYDX_AUTHENTICATOR_ID) {
-            // API Key mode — trade-only, uses permissioned authenticator
-            return SubaccountInfo.forPermissionedWallet(
-                wallet,
-                ownerAddress,
-                0,
-                [Long.fromString(process.env.DYDX_AUTHENTICATOR_ID)]
-            );
-        }
-
-        // Mnemonic mode — full access (backward compatible)
-        return SubaccountInfo.forLocalWallet(wallet, 0);
+        const localWallet = await LocalWallet.fromPrivateKey(
+            process.env.DYDX_API_PRIVATE_KEY,
+            BECH32_PREFIX
+        );
+        console.log('dYdX v4 API Key Address:', localWallet.address);
+        delete process.env.DYDX_API_PRIVATE_KEY;
+        return localWallet;
     }
 
     private getIndexerConfig() {
