@@ -18,8 +18,8 @@ const MAX_CONNECTION_RETRIES = 3;
 
 export class DydxV4Client {
     private static client: CompositeClient | null = null;
-    private static subaccount: SubaccountClient | null = null;
-    private static initializing: Promise<{ client: CompositeClient; subaccount: SubaccountClient }> | null = null;
+    private static subaccount: SubaccountInfo | null = null;
+    private static initializing: Promise<{ client: CompositeClient; subaccount: SubaccountInfo }> | null = null;
 
     async placeOrder(alertMessage: AlertObject): Promise<PlaceOrderResult> {
         const orderParams = this.buildOrderParams(alertMessage);
@@ -179,7 +179,7 @@ export class DydxV4Client {
         }
 
         const localWallet = await this.generateLocalWallet();
-        const subaccount = new SubaccountClient(localWallet, 0);
+        const subaccount = this.createSubaccount(localWallet);
 
         DydxV4Client.client = client;
         DydxV4Client.subaccount = subaccount;
@@ -188,15 +188,48 @@ export class DydxV4Client {
     }
 
     private async generateLocalWallet() {
-        if (!process.env.DYDX_V4_MNEMONIC) {
-            throw new Error('DYDX_V4_MNEMONIC is not set');
+        if (process.env.DYDX_API_PRIVATE_KEY) {
+            // API Key mode (trade-only — more secure)
+            const localWallet = await LocalWallet.fromPrivateKey(
+                process.env.DYDX_API_PRIVATE_KEY,
+                BECH32_PREFIX
+            );
+            console.log('dYdX v4 API Key Address:', localWallet.address);
+            // Delete from env after use — mnemonic/key not needed anymore at runtime
+            delete process.env.DYDX_API_PRIVATE_KEY;
+            return localWallet;
         }
-        const localWallet = await LocalWallet.fromMnemonic(
-            process.env.DYDX_V4_MNEMONIC,
-            BECH32_PREFIX
-        );
-        console.log('dYdX v4 Address:', localWallet.address);
-        return localWallet;
+
+        if (process.env.DYDX_V4_MNEMONIC) {
+            // Mnemonic mode (full access — fallback for backward compatibility)
+            const localWallet = await LocalWallet.fromMnemonic(
+                process.env.DYDX_V4_MNEMONIC,
+                BECH32_PREFIX
+            );
+            console.log('dYdX v4 Mnemonic Address:', localWallet.address);
+            // Delete from env after use
+            delete process.env.DYDX_V4_MNEMONIC;
+            return localWallet;
+        }
+
+        throw new Error('DYDX_API_PRIVATE_KEY or DYDX_V4_MNEMONIC must be set');
+    }
+
+    private createSubaccount(wallet: LocalWallet): SubaccountInfo {
+        const ownerAddress = process.env.DYDX_OWNER_ADDRESS;
+
+        if (ownerAddress && process.env.DYDX_AUTHENTICATOR_ID) {
+            // API Key mode — trade-only, uses permissioned authenticator
+            return SubaccountInfo.forPermissionedWallet(
+                wallet,
+                ownerAddress,
+                0,
+                [Long.fromString(process.env.DYDX_AUTHENTICATOR_ID)]
+            );
+        }
+
+        // Mnemonic mode — full access (backward compatible)
+        return SubaccountInfo.forLocalWallet(wallet, 0);
     }
 
     private getIndexerConfig() {
