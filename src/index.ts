@@ -1,15 +1,13 @@
-import express from 'express';
-import controller from './controllers/index';
-import helmet from 'helmet';
+import http from 'http';
 import 'dotenv/config';
+import { handleRequest } from './controllers/index';
 
-const app: express.Express = express();
 const port = process.env.PORT || 3000;
 
-app.use(helmet());
-app.use(express.json({ limit: '1kb' }));
-app.use('/', controller);
+const server = http.createServer(handleRequest);
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`TV-Connector web server listening on port ${port}`);
 });
+
+export { server };
