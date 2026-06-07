@@ -92,7 +92,7 @@ router.post('/', async (req, res) => {
             !alertMessage.passphrase ||
             alertMessage.passphrase !== process.env.TRADINGVIEW_PASSPHRASE
         ) {
-            const passLength = alertMessage.passphrase
+            const passLength = (typeof alertMessage.passphrase === 'string')
                 ? String(alertMessage.passphrase).length
                 : 0;
             recordFailedAttempt(ip, alertMessage.passphrase);
