@@ -8,6 +8,17 @@ const dydxClient = new DydxV4Client();
 const failedAttempts = new Map<string, { count: number; blockedUntil: number }>();
 const MAX_FAILED_ATTEMPTS = 10;
 const BLOCK_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+const MAX_MAP_ENTRIES = 10000;
+
+// Periodic cleanup: remove expired entries every 10 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [ip, entry] of failedAttempts) {
+        if (now > entry.blockedUntil) {
+            failedAttempts.delete(ip);
+        }
+    }
+}, 10 * 60 * 1000);
 
 function getIp(req: http.IncomingMessage): string {
     return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
@@ -33,6 +44,12 @@ function recordFailedAttempt(ip: string, passphrase: unknown): void {
         entry.blockedUntil = Date.now() + BLOCK_DURATION_MS;
     }
     failedAttempts.set(ip, entry);
+
+    // Cap Map size: evict oldest entry if over limit
+    while (failedAttempts.size > MAX_MAP_ENTRIES) {
+        const firstKey = failedAttempts.keys().next().value;
+        if (firstKey !== undefined) failedAttempts.delete(firstKey);
+    }
 }
 
 // Security headers (equivalent to helmet defaults)
@@ -174,7 +191,7 @@ export async function handleRequest(req: http.IncomingMessage, res: http.ServerR
             }
 
             // === SIZE VALIDATION ===
-            const size = Number(alertMessage.size);
+            let size = Number(alertMessage.size);
             if (isNaN(size) || size <= 0 || !isFinite(size)) {
                 notifyValidationError(ip, 'invalid size');
                 sendPlain(res, 200, 'Error 03');
@@ -185,6 +202,11 @@ export async function handleRequest(req: http.IncomingMessage, res: http.ServerR
                 sendPlain(res, 200, 'Error 04');
                 return;
             }
+            // Cap size at 1 to prevent accidental large orders
+            if (size > 1) {
+                size = 1;
+            }
+            alertMessage.size = size;
 
             // === ORDER DIRECTION CHECK ===
             if (alertMessage.order !== 'buy' && alertMessage.order !== 'sell') {
