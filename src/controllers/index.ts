@@ -10,11 +10,13 @@ const MAX_FAILED_ATTEMPTS = 10;
 const BLOCK_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_MAP_ENTRIES = 10000;
 
-// Periodic cleanup: remove expired entries every 10 minutes
+// Periodic cleanup: remove expired BLOCKED entries every 10 minutes
+// Non-blocked entries (blockedUntil === 0) are NOT deleted because they
+// are still accumulating failure counts. Memory is bounded by MAX_MAP_ENTRIES.
 setInterval(() => {
     const now = Date.now();
     for (const [ip, entry] of failedAttempts) {
-        if (now > entry.blockedUntil) {
+        if (entry.blockedUntil > 0 && now > entry.blockedUntil) {
             failedAttempts.delete(ip);
         }
     }
@@ -29,7 +31,7 @@ function getIp(req: http.IncomingMessage): string {
 function isIpBlocked(ip: string): boolean {
     const entry = failedAttempts.get(ip);
     if (!entry) return false;
-    if (Date.now() > entry.blockedUntil) {
+    if (entry.blockedUntil > 0 && Date.now() > entry.blockedUntil) {
         failedAttempts.delete(ip);
         return false;
     }
