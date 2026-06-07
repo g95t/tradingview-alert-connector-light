@@ -14,18 +14,11 @@
 		"@dydxprotocol/v4-client-js": "^1.0.27",
 		"dotenv": "^16.0.0",
 		"express": "^4.17.3",
-		"helmet": "^5.0.2",
-		"lodash": "^4.17.21"
+		"helmet": "^5.0.2"
 	},
 	"devDependencies": {
-		"@typescript-eslint/eslint-plugin": "^5.13.0",
-		"@typescript-eslint/parser": "^5.13.0",
 		"@types/express": "^4.17.13",
 		"@types/node": "^20.10.0",
-		"eslint": "^8.10.0",
-		"eslint-config-prettier": "^8.4.0",
-		"prettier": "2.5.1",
-		"tsc-watch": "^4.6.0",
 		"typescript": "^5.1.6"
 	}
 }
