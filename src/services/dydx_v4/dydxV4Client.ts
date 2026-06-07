@@ -2,7 +2,7 @@ import {
     BECH32_PREFIX,
     CompositeClient,
     Network,
-    SubaccountClient,
+    SubaccountInfo,
     ValidatorConfig,
     LocalWallet,
     OrderExecution,
@@ -11,6 +11,7 @@ import {
     OrderType,
     IndexerConfig
 } from '@dydxprotocol/v4-client-js';
+import Long from 'long';
 import { dydxV4OrderParams, AlertObject, PlaceOrderResult } from '../../types';
 
 const MAX_CONNECTION_RETRIES = 3;
